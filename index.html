@@ -39,7 +39,8 @@ body{display:flex;flex-direction:column;max-width:430px;margin:0 auto;height:100
 .chat-input-wrap{padding:10px 14px max(14px,env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:10px;align-items:flex-end;flex-shrink:0}
 .chat-input-wrap textarea{flex:1;background:var(--surface2);border:1px solid rgba(255,255,255,0.08);border-radius:22px;padding:10px 16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);resize:none;height:42px;max-height:120px;outline:none;line-height:1.4}
 .chat-input-wrap textarea::placeholder{color:var(--text3)}
-.send-btn{width:42px;height:42px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send-btn{width:42px;height:42px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
+.send-btn:active{transform:scale(0.93)}
 .members-wrap{padding:20px 16px}
 .section-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:600;margin-bottom:12px}
 .member-card{background:var(--surface);border:1px solid rgba(255,255,255,0.07);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;cursor:pointer}
@@ -78,6 +79,7 @@ body{display:flex;flex-direction:column;max-width:430px;margin:0 auto;height:100
 .form-group label{font-size:12px;color:var(--text3);font-weight:500;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px}
 .form-group input,.form-group select{width:100%;background:var(--surface2);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-sm);padding:12px 14px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none}
 .modal-btn{width:100%;padding:16px;border-radius:var(--radius-sm);background:var(--accent);border:none;color:#fff;font-size:16px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;margin-top:6px}
+.connecting{text-align:center;padding:20px;color:var(--text3);font-size:13px}
 .hidden{display:none!important}
 </style>
 </head>
@@ -86,93 +88,359 @@ body{display:flex;flex-direction:column;max-width:430px;margin:0 auto;height:100
   <h1>&#127968; Family Hub</h1>
   <div class="avatar-sm" id="my-avatar" style="background:#4c3d9e;color:#c4b5fd" onclick="openSetup()">Me</div>
 </div>
+
 <div class="screen hidden" id="screen-chat">
   <div class="chat-scroll" id="chat-messages">
-    <div class="msg-group"><div class="av" style="background:#1e3a5f;color:#60a5fa">Ma</div><div class="bubbles"><div class="sender-name">Mom</div><div class="bubble them">Good morning everyone! &#127748; Dinner at 6pm tonight?</div><div class="msg-time">8:02 AM</div></div></div>
-    <div class="msg-group"><div class="av" style="background:#14392a;color:#4ade80">Da</div><div class="bubbles"><div class="sender-name">Dad</div><div class="bubble them">Yes! I'll be home by 5:30 &#128077;</div><div class="msg-time">8:15 AM</div></div></div>
-    <div class="msg-group me"><div class="av" id="chat-my-av" style="background:#4c3d9e;color:#c4b5fd">Me</div><div class="bubbles"><div class="bubble me">Can we have pizza? &#127829;</div><div class="msg-time">8:20 AM</div></div></div>
-    <div class="msg-group"><div class="av" style="background:#3b1f3a;color:#e879f9">Si</div><div class="bubbles"><div class="sender-name">Sister</div><div class="bubble them">Pizza +1!! &#127759;</div><div class="msg-time">8:22 AM</div></div></div>
-    <div class="msg-group"><div class="av" style="background:#3b2a10;color:#fbbf24">Gr</div><div class="bubbles"><div class="sender-name">Grandma</div><div class="bubble them">Save me a slice &#128514;</div><div class="msg-time">8:45 AM</div></div></div>
+    <div class="connecting" id="connecting-msg">Connecting to family chat...</div>
   </div>
   <div class="chat-input-wrap">
     <textarea id="msg-input" placeholder="Message your family..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-    <button class="send-btn" onclick="sendMessage()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+    <button class="send-btn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
   </div>
 </div>
+
 <div class="screen hidden" id="screen-members">
   <div class="members-wrap">
-    <div class="section-label">5 members</div>
-    <div class="member-card"><div class="av-lg" style="background:#1e3a5f;color:#60a5fa">Ma</div><div class="member-info"><div class="member-name">Mom</div><div class="member-sub">Family organizer</div></div><div class="status-badge"><div class="dot online"></div><span style="color:#4ade80;font-size:11px">Online</span></div></div>
-    <div class="member-card"><div class="av-lg" style="background:#14392a;color:#4ade80">Da</div><div class="member-info"><div class="member-name">Dad</div><div class="member-sub">At work</div></div><div class="status-badge"><div class="dot online"></div><span style="color:#4ade80;font-size:11px">Online</span></div></div>
-    <div class="member-card" style="border-color:rgba(124,110,245,0.4)"><div class="av-lg" style="background:#4c3d9e;color:#c4b5fd" id="members-my-av">Me</div><div class="member-info"><div class="member-name" id="members-my-name">You</div><div class="member-sub">Tap to edit profile</div></div><div class="status-badge"><div class="dot online"></div><span style="color:#4ade80;font-size:11px">Online</span></div></div>
-    <div class="member-card"><div class="av-lg" style="background:#3b1f3a;color:#e879f9">Si</div><div class="member-info"><div class="member-name">Sister</div><div class="member-sub">At school</div></div><div class="status-badge"><div class="dot online"></div><span style="color:#4ade80;font-size:11px">Online</span></div></div>
-    <div class="member-card"><div class="av-lg" style="background:#3b2a10;color:#fbbf24">Gr</div><div class="member-info"><div class="member-name">Grandma</div><div class="member-sub">Last seen 2 hours ago</div></div><div class="status-badge"><div class="dot offline"></div><span style="color:var(--text3);font-size:11px">Away</span></div></div>
+    <div class="section-label" id="member-count">Family members</div>
+    <div id="members-list"></div>
     <button class="invite-btn" onclick="showInvite()">+ Invite a family member</button>
+    <div style="margin-top:20px;background:rgba(124,110,245,0.1);border:1px solid rgba(124,110,245,0.3);border-radius:var(--radius);padding:14px 16px">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">&#128241; Add to Home Screen</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.5">iPhone: tap Share &#8594; Add to Home Screen<br>Android: tap Menu &#8594; Add to Home Screen</div>
+    </div>
   </div>
 </div>
+
 <div class="screen hidden" id="screen-location">
   <div class="location-wrap">
-    <div class="map-box"><div class="map-grid"></div><div class="map-pins"><div class="map-pin" style="background:#1e3a5f;color:#60a5fa">Ma</div><div class="map-pin" style="background:#14392a;color:#4ade80">Da</div><div class="map-pin" style="background:#4c3d9e;color:#c4b5fd" id="loc-my-pin">Me</div><div class="map-pin" style="background:#3b1f3a;color:#e879f9">Si</div></div><div class="map-label">&#128205; Live family locations</div></div>
+    <div class="map-box">
+      <div class="map-grid"></div>
+      <div class="map-pins" id="map-pins"></div>
+      <div class="map-label">&#128205; Live family locations</div>
+    </div>
     <div class="section-label">Where everyone is</div>
-    <div class="loc-card"><div class="loc-ring" style="background:#1e3a5f;color:#60a5fa">Ma</div><div class="loc-info"><div class="loc-name">Mom</div><div class="loc-place">&#127968; 123 Maple Street</div></div><div class="loc-time">Now</div></div>
-    <div class="loc-card"><div class="loc-ring" style="background:#14392a;color:#4ade80">Da</div><div class="loc-info"><div class="loc-name">Dad</div><div class="loc-place">&#127970; Downtown Office</div></div><div class="loc-time">Now</div></div>
-    <div class="loc-card"><div class="loc-ring" style="background:#3b1f3a;color:#e879f9">Si</div><div class="loc-info"><div class="loc-name">Sister</div><div class="loc-place">&#127979; Westview High School</div></div><div class="loc-time">Now</div></div>
-    <div class="loc-card"><div class="loc-ring" style="background:#3b2a10;color:#fbbf24">Gr</div><div class="loc-info"><div class="loc-name">Grandma</div><div class="loc-place">&#127968; 45 Oak Avenue</div></div><div class="loc-time">2h ago</div></div>
+    <div id="location-list"></div>
     <button class="share-loc-btn" onclick="shareLocation()">&#128205; Share My Location</button>
   </div>
 </div>
+
 <div class="screen hidden" id="screen-photos">
   <div class="photos-wrap">
-    <div class="section-label">Family album &middot; 9 memories</div>
-    <div class="photo-grid"><div class="photo-cell">&#127958;</div><div class="photo-cell">&#127874;</div><div class="photo-cell">&#127876;</div><div class="photo-cell">&#127957;</div><div class="photo-cell">&#127881;</div><div class="photo-cell">&#127800;</div><div class="photo-cell">&#9971;</div><div class="photo-cell">&#128021;</div><div class="photo-cell">&#127749;</div></div>
+    <div class="section-label">Family album</div>
+    <div class="photo-grid" id="photo-grid">
+      <div class="photo-cell">&#127958;</div>
+      <div class="photo-cell">&#127874;</div>
+      <div class="photo-cell">&#127876;</div>
+      <div class="photo-cell">&#127957;</div>
+      <div class="photo-cell">&#127881;</div>
+      <div class="photo-cell">&#127800;</div>
+      <div class="photo-cell">&#9971;</div>
+      <div class="photo-cell">&#128021;</div>
+      <div class="photo-cell">&#127749;</div>
+    </div>
     <div style="display:flex;gap:10px">
       <label style="flex:1"><input type="file" accept="image/*" capture="environment" style="display:none" onchange="addPhoto(this)"><div class="photo-upload-btn" onclick="this.parentElement.querySelector('input').click()">&#128247; Take Photo</div></label>
       <label style="flex:1"><input type="file" accept="image/*" style="display:none" onchange="addPhoto(this)"><div class="photo-upload-btn" onclick="this.parentElement.querySelector('input').click()">&#128444; Upload</div></label>
     </div>
   </div>
 </div>
+
 <div class="tabbar">
   <div class="tab active" id="tab-chat" onclick="switchTab('chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Chat<div class="tab-indicator"></div></div>
   <div class="tab" id="tab-members" onclick="switchTab('members')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Family<div class="tab-indicator"></div></div>
   <div class="tab" id="tab-location" onclick="switchTab('location')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Location<div class="tab-indicator"></div></div>
   <div class="tab" id="tab-photos" onclick="switchTab('photos')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Photos<div class="tab-indicator"></div></div>
 </div>
+
 <div class="modal-overlay" id="setup-modal">
   <div class="modal">
     <h2>Welcome to Family Hub &#127968;</h2>
     <p>Set up your profile so your family knows it's you.</p>
-    <div class="form-group"><label>Your name</label><input type="text" id="setup-name" placeholder="e.g. Sarah" maxlength="20"></div>
+    <div class="form-group"><label>Your name</label><input type="text" id="setup-name" placeholder="e.g. Thomas" maxlength="20"></div>
     <div class="form-group"><label>Your role</label><select id="setup-role"><option>Mom</option><option>Dad</option><option>Son</option><option>Daughter</option><option>Grandma</option><option>Grandpa</option><option>Uncle</option><option>Aunt</option></select></div>
     <button class="modal-btn" onclick="saveSetup()">Join Family Hub</button>
   </div>
 </div>
+
 <div class="modal-overlay hidden" id="invite-modal">
   <div class="modal">
     <h2>Invite a family member &#128140;</h2>
-    <p>Share this link with them — works on iPhone and Android.</p>
+    <p>Share this link — works on iPhone and Android.</p>
     <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;word-break:break-all;font-size:13px;color:var(--text2)">&#128279; <span id="invite-link"></span></div>
     <button class="modal-btn" onclick="copyInvite()" style="margin-bottom:10px">Copy Invite Link</button>
     <button onclick="document.getElementById('invite-modal').classList.add('hidden')" style="width:100%;padding:14px;border-radius:var(--radius-sm);background:none;border:1px solid rgba(255,255,255,0.1);color:var(--text2);font-size:15px;font-family:'DM Sans',sans-serif;cursor:pointer">Cancel</button>
   </div>
 </div>
-<script>
-let myName=localStorage.getItem('fh-name')||'';
-let myRole=localStorage.getItem('fh-role')||'';
-function init(){if(myName){closeSetup();updateProfile()}switchTab('chat')}
-function switchTab(name){['chat','members','location','photos'].forEach(t=>{document.getElementById('screen-'+t).classList.add('hidden');document.getElementById('tab-'+t).classList.remove('active')});document.getElementById('screen-'+name).classList.remove('hidden');document.getElementById('tab-'+name).classList.add('active');if(name==='chat')scrollToBottom()}
-function scrollToBottom(){setTimeout(()=>{const c=document.getElementById('chat-messages');if(c)c.scrollTop=c.scrollHeight},50)}
-function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}}
-function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px'}
-function sendMessage(){const input=document.getElementById('msg-input');const text=input.value.trim();if(!text)return;const initials=(myName||'Me').substring(0,2).toUpperCase();const now=new Date();const h=now.getHours();const m=String(now.getMinutes()).padStart(2,'0');const time=(h%12||12)+':'+m+' '+(h<12?'AM':'PM');const msgs=document.getElementById('chat-messages');const div=document.createElement('div');div.className='msg-group me';div.innerHTML='<div class="av" style="background:#4c3d9e;color:#c4b5fd">'+initials+'</div><div class="bubbles"><div class="bubble me">'+escHtml(text)+'</div><div class="msg-time">'+time+'</div></div>';msgs.appendChild(div);input.value='';input.style.height='42px';scrollToBottom();let h2=JSON.parse(localStorage.getItem('fh-messages')||'[]');h2.push({text,time});if(h2.length>100)h2=h2.slice(-100);localStorage.setItem('fh-messages',JSON.stringify(h2))}
-function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function openSetup(){document.getElementById('setup-modal').classList.remove('hidden')}
-function closeSetup(){document.getElementById('setup-modal').classList.add('hidden')}
-function saveSetup(){const name=document.getElementById('setup-name').value.trim();if(!name){alert('Please enter your name');return}myName=name;myRole=document.getElementById('setup-role').value;localStorage.setItem('fh-name',myName);localStorage.setItem('fh-role',myRole);closeSetup();updateProfile()}
-function updateProfile(){const i=myName.substring(0,2).toUpperCase();['my-avatar','chat-my-av','members-my-av','loc-my-pin'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=i});const mn=document.getElementById('members-my-name');if(mn)mn.textContent=myName+' (You)'}
-function shareLocation(){if(navigator.geolocation){navigator.geolocation.getCurrentPosition(pos=>{alert('Location shared!\nLat: '+pos.coords.latitude.toFixed(4)+'\nLng: '+pos.coords.longitude.toFixed(4))},()=>alert('Please allow location access.'))}else{alert('Location not supported.')}}
-function showInvite(){document.getElementById('invite-link').textContent=window.location.href;document.getElementById('invite-modal').classList.remove('hidden')}
-function copyInvite(){const link=window.location.href;if(navigator.clipboard){navigator.clipboard.writeText(link).then(()=>alert('Link copied! Send it to your family on WhatsApp.'))}else{const el=document.createElement('textarea');el.value=link;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);alert('Link copied!')}}
-function addPhoto(input){if(!input.files||!input.files[0])return;const reader=new FileReader();reader.onload=function(e){const grid=document.querySelector('.photo-grid');const cell=document.createElement('div');cell.className='photo-cell';cell.style.cssText='background:#111;padding:0';const img=document.createElement('img');img.src=e.target.result;img.style.cssText='width:100%;height:100%;object-fit:cover';cell.appendChild(img);grid.insertBefore(cell,grid.firstChild)};reader.readAsDataURL(input.files[0])}
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDivKiDnCUBa5JxYK2E_sCuPrLNe7KCXos",
+  authDomain: "family-hub-c00d6.firebaseapp.com",
+  projectId: "family-hub-c00d6",
+  storageBucket: "family-hub-c00d6.firebasestorage.app",
+  messagingSenderId: "752056971",
+  appId: "1:752056971:web:c7947d2c571a612755f28e",
+  measurementId: "G-SDDE1RBQJ3",
+  databaseURL: "https://family-hub-c00d6-default-rtdb.firebaseio.com"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const COLORS = [
+  {bg:'#1e3a5f',fg:'#60a5fa'},
+  {bg:'#14392a',fg:'#4ade80'},
+  {bg:'#4c3d9e',fg:'#c4b5fd'},
+  {bg:'#3b1f3a',fg:'#e879f9'},
+  {bg:'#3b2a10',fg:'#fbbf24'},
+  {bg:'#1a2a3a',fg:'#38bdf8'},
+  {bg:'#2a1a1a',fg:'#f87171'},
+];
+
+let myName = localStorage.getItem('fh-name') || '';
+let myRole = localStorage.getItem('fh-role') || '';
+let myColor = parseInt(localStorage.getItem('fh-color') || '0');
+let renderedMsgIds = new Set();
+
+window.switchTab = function(name) {
+  ['chat','members','location','photos'].forEach(t => {
+    document.getElementById('screen-'+t).classList.add('hidden');
+    document.getElementById('tab-'+t).classList.remove('active');
+  });
+  document.getElementById('screen-'+name).classList.remove('hidden');
+  document.getElementById('tab-'+name).classList.add('active');
+  if (name === 'chat') scrollToBottom();
+};
+
+window.handleKey = function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.sendMessage(); }
+};
+
+window.autoResize = function(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+};
+
+window.sendMessage = function() {
+  if (!myName) { openSetup(); return; }
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text) return;
+  push(ref(db, 'messages'), {
+    text,
+    name: myName,
+    role: myRole,
+    colorIndex: myColor,
+    timestamp: serverTimestamp()
+  });
+  input.value = '';
+  input.style.height = '42px';
+};
+
+window.openSetup = function() {
+  document.getElementById('setup-modal').classList.remove('hidden');
+};
+
+window.saveSetup = function() {
+  const name = document.getElementById('setup-name').value.trim();
+  if (!name) { alert('Please enter your name'); return; }
+  myName = name;
+  myRole = document.getElementById('setup-role').value;
+  myColor = Math.floor(Math.random() * COLORS.length);
+  localStorage.setItem('fh-name', myName);
+  localStorage.setItem('fh-role', myRole);
+  localStorage.setItem('fh-color', myColor);
+  document.getElementById('setup-modal').classList.add('hidden');
+  updateAvatar();
+  registerMember();
+};
+
+window.showInvite = function() {
+  document.getElementById('invite-link').textContent = window.location.href;
+  document.getElementById('invite-modal').classList.remove('hidden');
+};
+
+window.copyInvite = function() {
+  const link = window.location.href;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link).then(() => alert('Link copied! Send it to your family on WhatsApp.'));
+  } else {
+    const el = document.createElement('textarea');
+    el.value = link; document.body.appendChild(el);
+    el.select(); document.execCommand('copy');
+    document.body.removeChild(el);
+    alert('Link copied!');
+  }
+};
+
+window.shareLocation = function() {
+  if (!myName) { openSetup(); return; }
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      const {latitude, longitude} = pos.coords;
+      set(ref(db, 'locations/' + myName), {
+        name: myName,
+        role: myRole,
+        colorIndex: myColor,
+        lat: latitude,
+        lng: longitude,
+        timestamp: Date.now()
+      });
+      alert('Your location has been shared with the family!');
+    }, () => alert('Please allow location access in your browser settings.'));
+  }
+};
+
+window.addPhoto = function(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const grid = document.getElementById('photo-grid');
+    const cell = document.createElement('div');
+    cell.className = 'photo-cell';
+    cell.style.cssText = 'background:#111;padding:0';
+    const img = document.createElement('img');
+    img.src = e.target.result;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+    cell.appendChild(img);
+    grid.insertBefore(cell, grid.firstChild);
+  };
+  reader.readAsDataURL(input.files[0]);
+};
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function scrollToBottom() {
+  setTimeout(() => {
+    const c = document.getElementById('chat-messages');
+    if (c) c.scrollTop = c.scrollHeight;
+  }, 50);
+}
+
+function updateAvatar() {
+  const initials = myName.substring(0,2).toUpperCase();
+  const av = document.getElementById('my-avatar');
+  const c = COLORS[myColor];
+  av.textContent = initials;
+  av.style.background = c.bg;
+  av.style.color = c.fg;
+}
+
+function formatTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const h = d.getHours(); const m = String(d.getMinutes()).padStart(2,'0');
+  return (h % 12 || 12) + ':' + m + ' ' + (h < 12 ? 'AM' : 'PM');
+}
+
+function registerMember() {
+  if (!myName) return;
+  set(ref(db, 'members/' + myName), {
+    name: myName,
+    role: myRole,
+    colorIndex: myColor,
+    lastSeen: serverTimestamp()
+  });
+}
+
+// Listen to messages
+onValue(ref(db, 'messages'), snapshot => {
+  const msgs = document.getElementById('chat-messages');
+  const connecting = document.getElementById('connecting-msg');
+  if (connecting) connecting.remove();
+
+  const data = snapshot.val() || {};
+  const entries = Object.entries(data).sort((a,b) => (a[1].timestamp||0) - (b[1].timestamp||0));
+
+  entries.forEach(([id, msg]) => {
+    if (renderedMsgIds.has(id)) return;
+    renderedMsgIds.add(id);
+    const isMe = msg.name === myName;
+    const c = COLORS[msg.colorIndex || 0];
+    const div = document.createElement('div');
+    div.className = 'msg-group' + (isMe ? ' me' : '');
+    div.innerHTML = `
+      <div class="av" style="background:${c.bg};color:${c.fg}">${escHtml(msg.name.substring(0,2).toUpperCase())}</div>
+      <div class="bubbles">
+        ${!isMe ? `<div class="sender-name">${escHtml(msg.name)}</div>` : ''}
+        <div class="bubble ${isMe ? 'me' : 'them'}">${escHtml(msg.text)}</div>
+        <div class="msg-time">${formatTime(msg.timestamp)}</div>
+      </div>`;
+    msgs.appendChild(div);
+  });
+  scrollToBottom();
+});
+
+// Listen to members
+onValue(ref(db, 'members'), snapshot => {
+  const data = snapshot.val() || {};
+  const list = document.getElementById('members-list');
+  const pins = document.getElementById('map-pins');
+  list.innerHTML = '';
+  pins.innerHTML = '';
+  const members = Object.values(data);
+  document.getElementById('member-count').textContent = members.length + ' member' + (members.length !== 1 ? 's' : '');
+  members.forEach(m => {
+    const c = COLORS[m.colorIndex || 0];
+    const isMe = m.name === myName;
+    const card = document.createElement('div');
+    card.className = 'member-card';
+    if (isMe) card.style.borderColor = 'rgba(124,110,245,0.4)';
+    card.innerHTML = `
+      <div class="av-lg" style="background:${c.bg};color:${c.fg}">${escHtml(m.name.substring(0,2).toUpperCase())}</div>
+      <div class="member-info">
+        <div class="member-name">${escHtml(m.name)}${isMe ? ' (You)' : ''}</div>
+        <div class="member-sub">${escHtml(m.role || '')}</div>
+      </div>
+      <div class="status-badge"><div class="dot online"></div><span style="color:#4ade80;font-size:11px">Online</span></div>`;
+    list.appendChild(card);
+    const pin = document.createElement('div');
+    pin.className = 'map-pin';
+    pin.style.cssText = `background:${c.bg};color:${c.fg}`;
+    pin.textContent = m.name.substring(0,2).toUpperCase();
+    pins.appendChild(pin);
+  });
+});
+
+// Listen to locations
+onValue(ref(db, 'locations'), snapshot => {
+  const data = snapshot.val() || {};
+  const locList = document.getElementById('location-list');
+  locList.innerHTML = '';
+  Object.values(data).forEach(loc => {
+    const c = COLORS[loc.colorIndex || 0];
+    const ago = loc.timestamp ? Math.round((Date.now() - loc.timestamp) / 60000) : null;
+    const timeStr = ago === null ? '' : ago < 2 ? 'Just now' : ago + ' min ago';
+    const card = document.createElement('div');
+    card.className = 'loc-card';
+    card.innerHTML = `
+      <div class="loc-ring" style="background:${c.bg};color:${c.fg}">${escHtml(loc.name.substring(0,2).toUpperCase())}</div>
+      <div class="loc-info">
+        <div class="loc-name">${escHtml(loc.name)}</div>
+        <div class="loc-place">&#128205; ${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}</div>
+      </div>
+      <div class="loc-time">${timeStr}</div>`;
+    locList.appendChild(card);
+  });
+});
+
+// Init
+function init() {
+  if (myName) {
+    updateAvatar();
+    registerMember();
+    document.getElementById('setup-modal').classList.add('hidden');
+  }
+  switchTab('chat');
+}
+
 init();
 </script>
 </body>
